@@ -52,7 +52,6 @@ library
     flat,
     hashable,
     plutus-tx,
-    plutus-tx-plugin,
     plutus-ledger-api,
     QuickCheck,
     shelley-spec-ledger-test,
