@@ -33,6 +33,7 @@ import Data.ByteString.Short.Internal (ShortByteString (SBS))
 import Data.Maybe (fromMaybe)
 import qualified Data.Primitive.ByteArray as BA
 import Data.Word (Word8)
+import GHC.Natural (Natural)
 import Shelley.Spec.Ledger.Address (Addr (..), BootstrapAddress (..), Word7 (..), byron, isEnterpriseAddr, notBaseAddr, payCredIsScript, serialiseAddr, stakeCredIsScript, toWord7, word7sToNat)
 import Shelley.Spec.Ledger.Credential
   ( Credential (KeyHashObj, ScriptHashObj),
@@ -42,7 +43,6 @@ import Shelley.Spec.Ledger.Credential
   )
 import Shelley.Spec.Ledger.Scripts (ScriptHash (..))
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
-import GHC.Natural (Natural)
 
 newtype CompactAddr crypto = UnsafeCompactAddr ShortByteString
   deriving (Eq, Ord)
@@ -181,16 +181,16 @@ skip n = GetShort $ \i sbs ->
 getWord7s :: GetShort [Word7]
 getWord7s = go 1
   where
-  go :: Int -> GetShort [Word7]
-  go 64 = pure []
-  go n = do
-    next <- getWord
-    -- is the high bit set?
-    if testBit next 7
-      then -- if so, grab more words
-        (:) (toWord7 next) <$> go (n + 1)
-      else -- otherwise, this is the last one
-        pure [Word7 next]
+    go :: Int -> GetShort [Word7]
+    go 64 = pure []
+    go n = do
+      next <- getWord
+      -- is the high bit set?
+      if testBit next 7
+        then -- if so, grab more words
+          (:) (toWord7 next) <$> go (n + 1)
+        else -- otherwise, this is the last one
+          pure [Word7 next]
 
 getVariableLengthNat :: GetShort Natural
 getVariableLengthNat = word7sToNat <$> getWord7s

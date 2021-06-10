@@ -43,11 +43,11 @@ import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import GHC.Generics (Generic)
 import NoThunks.Class (NoThunks (..))
+import Numeric.Natural (Natural)
 import Quiet
 import Shelley.Spec.Ledger.Orphans ()
 import Shelley.Spec.Ledger.Scripts (ScriptHash)
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
-import Numeric.Natural (Natural)
 
 -- | Script hash or key hash for a payment or a staking object.
 --

@@ -96,6 +96,7 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
 import NoThunks.Class (NoThunks (..))
+import Numeric.Natural (Natural)
 import Quiet
 import Shelley.Spec.Ledger.Credential
   ( Credential (..),
@@ -105,7 +106,6 @@ import Shelley.Spec.Ledger.Credential
   )
 import Shelley.Spec.Ledger.Scripts
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
-import Numeric.Natural (Natural)
 
 mkVKeyRwdAcnt ::
   CC.Crypto crypto =>
@@ -411,16 +411,16 @@ putWord7s (Word7 x : xs) = B.putWord8 (x .|. 0x80) >> putWord7s xs
 getWord7s :: Get [Word7]
 getWord7s = go 1
   where
-  go :: Int -> Get [Word7]
-  go 64 = pure []
-  go n = do
-    next <- B.getWord8
-    -- is the high bit set?
-    if testBit next 7
-      then -- if so, grab more words
-        (:) (toWord7 next) <$> go (n + 1)
-      else -- otherwise, this is the last one
-        pure [Word7 next]
+    go :: Int -> Get [Word7]
+    go 64 = pure []
+    go n = do
+      next <- B.getWord8
+      -- is the high bit set?
+      if testBit next 7
+        then -- if so, grab more words
+          (:) (toWord7 next) <$> go (n + 1)
+        else -- otherwise, this is the last one
+          pure [Word7 next]
 
 natToWord7s :: Natural -> [Word7]
 natToWord7s = reverse . go
