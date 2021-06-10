@@ -32,8 +32,8 @@ import Data.ByteString.Short as SBS
 import Data.ByteString.Short.Internal (ShortByteString (SBS))
 import Data.Maybe (fromMaybe)
 import qualified Data.Primitive.ByteArray as BA
-import Data.Word (Word64, Word8)
-import Shelley.Spec.Ledger.Address (Addr (..), BootstrapAddress (..), Word7 (..), byron, isEnterpriseAddr, notBaseAddr, payCredIsScript, serialiseAddr, stakeCredIsScript, toWord7, word7sToWord64)
+import Data.Word (Word8)
+import Shelley.Spec.Ledger.Address (Addr (..), BootstrapAddress (..), Word7 (..), byron, isEnterpriseAddr, notBaseAddr, payCredIsScript, serialiseAddr, stakeCredIsScript, toWord7, word7sToNat)
 import Shelley.Spec.Ledger.Credential
   ( Credential (KeyHashObj, ScriptHashObj),
     PaymentCredential,
@@ -42,6 +42,7 @@ import Shelley.Spec.Ledger.Credential
   )
 import Shelley.Spec.Ledger.Scripts (ScriptHash (..))
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
+import GHC.Natural (Natural)
 
 newtype CompactAddr crypto = UnsafeCompactAddr ShortByteString
   deriving (Eq, Ord)
@@ -176,24 +177,29 @@ skip n = GetShort $ \i sbs ->
         then Just (offsetStop, ())
         else Nothing
 
+-- limited to 64 bytes
 getWord7s :: GetShort [Word7]
-getWord7s = do
-  next <- getWord
-  -- is the high bit set?
-  if testBit next 7
-    then -- if so, grab more words
-      (:) (toWord7 next) <$> getWord7s
-    else -- otherwise, this is the last one
-      pure [Word7 next]
+getWord7s = go 1
+  where
+  go :: Int -> GetShort [Word7]
+  go 64 = pure []
+  go n = do
+    next <- getWord
+    -- is the high bit set?
+    if testBit next 7
+      then -- if so, grab more words
+        (:) (toWord7 next) <$> go (n + 1)
+      else -- otherwise, this is the last one
+        pure [Word7 next]
 
-getVariableLengthWord64 :: GetShort Word64
-getVariableLengthWord64 = word7sToWord64 <$> getWord7s
+getVariableLengthNat :: GetShort Natural
+getVariableLengthNat = word7sToNat <$> getWord7s
 
 getPtr :: GetShort Ptr
 getPtr =
-  Ptr <$> (SlotNo <$> getVariableLengthWord64)
-    <*> getVariableLengthWord64
-    <*> getVariableLengthWord64
+  Ptr <$> (SlotNo . fromIntegral <$> getVariableLengthNat)
+    <*> getVariableLengthNat
+    <*> getVariableLengthNat
 
 getKeyHash :: CC.Crypto crypto => GetShort (Credential kr crypto)
 getKeyHash = KeyHashObj . KeyHash <$> getHash

@@ -39,16 +39,16 @@ module Shelley.Spec.Ledger.Address
     getPtr,
     getRewardAcnt,
     getScriptHash,
-    getVariableLengthWord64,
+    getVariableLengthNat,
     payCredIsScript,
     putAddr,
     putCredential,
     putPtr,
     putRewardAcnt,
-    putVariableLengthWord64,
+    putVariableLengthNat,
     -- TODO: these should live somewhere else
-    word64ToWord7s,
-    word7sToWord64,
+    natToWord7s,
+    word7sToNat,
     Word7 (..),
     toWord7,
   )
@@ -94,7 +94,6 @@ import Data.Maybe (fromMaybe)
 import Data.String (fromString)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
-import Data.Word (Word64)
 import GHC.Generics (Generic)
 import NoThunks.Class (NoThunks (..))
 import Quiet
@@ -106,6 +105,7 @@ import Shelley.Spec.Ledger.Credential
   )
 import Shelley.Spec.Ledger.Scripts
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
+import Numeric.Natural (Natural)
 
 mkVKeyRwdAcnt ::
   CC.Crypto crypto =>
@@ -385,16 +385,16 @@ isBootstrapRedeemer _ = False
 putPtr :: Ptr -> Put
 putPtr (Ptr slot txIx certIx) = do
   putSlot slot
-  putVariableLengthWord64 txIx
-  putVariableLengthWord64 certIx
+  putVariableLengthNat txIx
+  putVariableLengthNat certIx
   where
-    putSlot (SlotNo n) = putVariableLengthWord64 n
+    putSlot (SlotNo n) = putVariableLengthNat (fromIntegral n)
 
 getPtr :: Get Ptr
 getPtr =
-  Ptr <$> (SlotNo <$> getVariableLengthWord64)
-    <*> getVariableLengthWord64
-    <*> getVariableLengthWord64
+  Ptr <$> (SlotNo . fromIntegral <$> getVariableLengthNat)
+    <*> getVariableLengthNat
+    <*> getVariableLengthNat
 
 newtype Word7 = Word7 Word8
   deriving (Eq, Show)
@@ -407,35 +407,40 @@ putWord7s [] = pure ()
 putWord7s [Word7 x] = B.putWord8 x
 putWord7s (Word7 x : xs) = B.putWord8 (x .|. 0x80) >> putWord7s xs
 
+-- limited to 64 bytes
 getWord7s :: Get [Word7]
-getWord7s = do
-  next <- B.getWord8
-  -- is the high bit set?
-  if testBit next 7
-    then -- if so, grab more words
-      (:) (toWord7 next) <$> getWord7s
-    else -- otherwise, this is the last one
-      pure [Word7 next]
-
-word64ToWord7s :: Word64 -> [Word7]
-word64ToWord7s = reverse . go
+getWord7s = go 1
   where
-    go :: Word64 -> [Word7]
+  go :: Int -> Get [Word7]
+  go 64 = pure []
+  go n = do
+    next <- B.getWord8
+    -- is the high bit set?
+    if testBit next 7
+      then -- if so, grab more words
+        (:) (toWord7 next) <$> go (n + 1)
+      else -- otherwise, this is the last one
+        pure [Word7 next]
+
+natToWord7s :: Natural -> [Word7]
+natToWord7s = reverse . go
+  where
+    go :: Natural -> [Word7]
     go n
       | n > 0x7F = (toWord7 . fromIntegral) n : go (shiftR n 7)
       | otherwise = [Word7 . fromIntegral $ n]
 
-putVariableLengthWord64 :: Word64 -> Put
-putVariableLengthWord64 = putWord7s . word64ToWord7s
+putVariableLengthNat :: Natural -> Put
+putVariableLengthNat = putWord7s . natToWord7s
 
 -- invariant: length [Word7] < 8
-word7sToWord64 :: [Word7] -> Word64
-word7sToWord64 = foldl' f 0
+word7sToNat :: [Word7] -> Natural
+word7sToNat = foldl' f 0
   where
     f n (Word7 r) = shiftL n 7 .|. (fromIntegral r)
 
-getVariableLengthWord64 :: Get Word64
-getVariableLengthWord64 = word7sToWord64 <$> getWord7s
+getVariableLengthNat :: Get Natural
+getVariableLengthNat = word7sToNat <$> getWord7s
 
 decoderFromGet :: Text -> Get a -> Decoder s a
 decoderFromGet name get = do

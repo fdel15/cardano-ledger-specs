@@ -40,13 +40,14 @@ import Data.Aeson (FromJSON (..), FromJSONKey, ToJSON (..), ToJSONKey, (.:), (.=
 import qualified Data.Aeson as Aeson
 import Data.Foldable (asum)
 import Data.Typeable (Typeable)
-import Data.Word (Word64, Word8)
+import Data.Word (Word8)
 import GHC.Generics (Generic)
 import NoThunks.Class (NoThunks (..))
 import Quiet
 import Shelley.Spec.Ledger.Orphans ()
 import Shelley.Spec.Ledger.Scripts (ScriptHash)
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
+import Numeric.Natural (Natural)
 
 -- | Script hash or key hash for a payment or a staking object.
 --
@@ -99,7 +100,7 @@ data StakeReference crypto
 
 instance NoThunks (StakeReference crypto)
 
-type Ix = Word64
+type Ix = Natural
 
 -- | Pointer to a slot, transaction index and index in certificate list.
 data Ptr
