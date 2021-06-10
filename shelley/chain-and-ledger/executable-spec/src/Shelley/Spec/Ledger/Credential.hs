@@ -13,7 +13,7 @@
 module Shelley.Spec.Ledger.Credential
   ( Credential (KeyHashObj, ScriptHashObj),
     GenesisCredential (..),
-    Ix,
+    Ix (..),
     PaymentCredential,
     Ptr (..),
     StakeCredential,
@@ -48,6 +48,7 @@ import Quiet
 import Shelley.Spec.Ledger.Orphans ()
 import Shelley.Spec.Ledger.Scripts (ScriptHash)
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
+import Data.Text.Prettyprint.Doc
 
 -- | Script hash or key hash for a payment or a staking object.
 --
@@ -100,7 +101,20 @@ data StakeReference crypto
 
 instance NoThunks (StakeReference crypto)
 
-type Ix = Natural
+newtype Ix = Ix { unIx :: Natural }
+  deriving stock (Show, Generic)
+  deriving newtype (Eq, Ord, NFData, NoThunks, Pretty, ToCBOR, Enum, Num)
+
+instance Bounded Ix where
+  minBound = Ix 0
+  maxBound = Ix ((2 ^ (64 * 8 :: Natural)) - 1)
+
+instance FromCBOR Ix where
+  fromCBOR = do
+    n <- fromCBOR
+    if n > unIx maxBound
+    then fail "Ix exceeds 64 bytes"
+    else pure (Ix n)
 
 -- | Pointer to a slot, transaction index and index in certificate list.
 data Ptr

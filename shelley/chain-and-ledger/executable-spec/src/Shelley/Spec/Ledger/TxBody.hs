@@ -29,7 +29,7 @@ module Shelley.Spec.Ledger.TxBody
     DelegCert (..),
     Delegation (..),
     GenesisDelegCert (..),
-    Ix,
+    Ix (..),
     MIRCert (..),
     MIRPot (..),
     MIRTarget (..),
@@ -205,7 +205,7 @@ import Shelley.Spec.Ledger.CompactAddr
   )
 import Shelley.Spec.Ledger.Credential
   ( Credential (..),
-    Ix,
+    Ix (..),
     Ptr (..),
     StakeCredential,
   )

@@ -40,6 +40,7 @@ module Shelley.Spec.Ledger.Address
     getRewardAcnt,
     getScriptHash,
     getVariableLengthNat,
+    getIx,
     payCredIsScript,
     putAddr,
     putCredential,
@@ -102,10 +103,11 @@ import Shelley.Spec.Ledger.Credential
   ( Credential (..),
     PaymentCredential,
     Ptr (..),
-    StakeReference (..),
+    StakeReference (..), Ix (..)
   )
 import Shelley.Spec.Ledger.Scripts
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
+import Control.Monad (when)
 
 mkVKeyRwdAcnt ::
   CC.Crypto crypto =>
@@ -385,16 +387,17 @@ isBootstrapRedeemer _ = False
 putPtr :: Ptr -> Put
 putPtr (Ptr slot txIx certIx) = do
   putSlot slot
-  putVariableLengthNat txIx
-  putVariableLengthNat certIx
+  putIx txIx
+  putIx certIx
   where
+    putIx (Ix n) = putVariableLengthNat n
     putSlot (SlotNo n) = putVariableLengthNat (fromIntegral n)
 
 getPtr :: Get Ptr
 getPtr =
   Ptr <$> (SlotNo . fromIntegral <$> getVariableLengthNat)
-    <*> getVariableLengthNat
-    <*> getVariableLengthNat
+    <*> getIx
+    <*> getIx
 
 newtype Word7 = Word7 Word8
   deriving (Eq, Show)
@@ -409,18 +412,14 @@ putWord7s (Word7 x : xs) = B.putWord8 (x .|. 0x80) >> putWord7s xs
 
 -- limited to 64 bytes
 getWord7s :: Get [Word7]
-getWord7s = go 1
-  where
-    go :: Int -> Get [Word7]
-    go 64 = fail "Word7s exceeds 64 bytes"
-    go n = do
-      next <- B.getWord8
-      -- is the high bit set?
-      if testBit next 7
-        then -- if so, grab more words
-          (:) (toWord7 next) <$> go (n + 1)
-        else -- otherwise, this is the last one
-          pure [Word7 next]
+getWord7s = do
+  next <- B.getWord8
+  -- is the high bit set?
+  if testBit next 7
+    then -- if so, grab more words
+      (:) (toWord7 next) <$> getWord7s
+    else -- otherwise, this is the last one
+      pure [Word7 next]
 
 natToWord7s :: Natural -> [Word7]
 natToWord7s = reverse . go
@@ -441,6 +440,12 @@ word7sToNat = foldl' f 0
 
 getVariableLengthNat :: Get Natural
 getVariableLengthNat = word7sToNat <$> getWord7s
+
+getIx :: Get Ix
+getIx = do 
+  n <- getVariableLengthNat
+  when (n > unIx maxBound) $ fail "Ix exceeds 64 bytes"
+  pure (Ix n)
 
 decoderFromGet :: Text -> Get a -> Decoder s a
 decoderFromGet name get = do

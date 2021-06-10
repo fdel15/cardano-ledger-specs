@@ -92,7 +92,7 @@ import Cardano.Ledger.BaseTypes
 import Shelley.Spec.Ledger.Delegation.Certificates (IndividualPoolStake (..))
 import Shelley.Spec.Ledger.EpochBoundary (BlocksMade (..))
 import Shelley.Spec.Ledger.LedgerState
-  ( FutureGenDeleg,
+  ( FutureGenDeleg, Ix (..)
   )
 import qualified Shelley.Spec.Ledger.Metadata as MD
 import Shelley.Spec.Ledger.RewardProvenance
@@ -352,11 +352,11 @@ instance CC.Crypto crypto => Arbitrary (Credential r crypto) where
         KeyHashObj <$> arbitrary
       ]
 
+instance Arbitrary Ix where
+  arbitrary = Ix . fromInteger <$> chooseInteger (0, (2 ^ (64 * 8 :: Integer)) - 1) -- limited to 64 bytes
+
 instance Arbitrary Ptr where
-  arbitrary = Ptr <$> arbitrary <*> arbitraryIx <*> arbitraryIx
-    where
-    arbitraryIx :: Gen Natural
-    arbitraryIx = fromInteger <$> chooseInteger (0, (2 ^ (64 * 8 :: Integer)) - 1) -- limited to 64 bytes
+  arbitrary = genericArbitraryU
   shrink = genericShrink
 
 instance CC.Crypto crypto => Arbitrary (RewardAcnt crypto) where

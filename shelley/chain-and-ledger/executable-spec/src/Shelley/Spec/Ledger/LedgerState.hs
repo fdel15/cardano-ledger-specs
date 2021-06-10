@@ -39,7 +39,7 @@ module Shelley.Spec.Ledger.LedgerState
     PulsingRewUpdate (..),
     FutureGenDeleg (..),
     InstantaneousRewards (..),
-    Ix,
+    Ix (..),
     KeyPairs,
     LedgerState (..),
     PPUPState (..),
@@ -240,7 +240,7 @@ import Shelley.Spec.Ledger.Tx
   )
 import Shelley.Spec.Ledger.TxBody
   ( EraIndependentTxBody,
-    Ix,
+    Ix (..),
     MIRPot (..),
     PoolCert (..),
     PoolParams (..),

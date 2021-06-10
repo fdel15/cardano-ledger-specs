@@ -83,6 +83,7 @@ import Shelley.Spec.Ledger.TxBody
     RewardAcnt (..),
     Wdrl (..),
   )
+import Shelley.Spec.Ledger.Credential (Ix(Ix))
 
 data DELEGS era
 
@@ -239,7 +240,7 @@ delegsTransition = do
             _ -> Right ()
       isDelegationRegistered ?!: id
 
-      let ptr = Ptr slot txIx (fromIntegral $ length gamma)
+      let ptr = Ptr slot txIx (Ix $ fromIntegral $ length gamma)
       trans @(Core.EraRule "DELPL" era) $
         TRC (DelplEnv slot ptr pp acnt, dpstate', c)
   where

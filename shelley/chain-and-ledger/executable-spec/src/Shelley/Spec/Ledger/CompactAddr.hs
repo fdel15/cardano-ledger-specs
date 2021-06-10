@@ -39,10 +39,11 @@ import Shelley.Spec.Ledger.Credential
   ( Credential (KeyHashObj, ScriptHashObj),
     PaymentCredential,
     Ptr (..),
-    StakeReference (..),
+    StakeReference (..), Ix (..)
   )
 import Shelley.Spec.Ledger.Scripts (ScriptHash (..))
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
+import Control.Monad (when)
 
 newtype CompactAddr crypto = UnsafeCompactAddr ShortByteString
   deriving (Eq, Ord)
@@ -179,27 +180,29 @@ skip n = GetShort $ \i sbs ->
 
 -- limited to 64 bytes
 getWord7s :: GetShort [Word7]
-getWord7s = go 1
-  where
-    go :: Int -> GetShort [Word7]
-    go 64 = fail "Word7s exceeds 64 bytes"
-    go n = do
-      next <- getWord
-      -- is the high bit set?
-      if testBit next 7
-        then -- if so, grab more words
-          (:) (toWord7 next) <$> go (n + 1)
-        else -- otherwise, this is the last one
-          pure [Word7 next]
+getWord7s = do
+  next <- getWord
+  -- is the high bit set?
+  if testBit next 7
+    then -- if so, grab more words
+      (:) (toWord7 next) <$> getWord7s
+    else -- otherwise, this is the last one
+      pure [Word7 next]
 
 getVariableLengthNat :: GetShort Natural
 getVariableLengthNat = word7sToNat <$> getWord7s
 
+getIx :: GetShort Ix
+getIx = do 
+  n <- getVariableLengthNat
+  when (n > unIx maxBound) $ fail "Ix exceeds 64 bytes"
+  pure (Ix n)
+
 getPtr :: GetShort Ptr
 getPtr =
   Ptr <$> (SlotNo . fromIntegral <$> getVariableLengthNat)
-    <*> getVariableLengthNat
-    <*> getVariableLengthNat
+    <*> getIx
+    <*> getIx
 
 getKeyHash :: CC.Crypto crypto => GetShort (Credential kr crypto)
 getKeyHash = KeyHashObj . KeyHash <$> getHash

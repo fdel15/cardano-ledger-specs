@@ -84,7 +84,7 @@ import qualified PlutusCore.Evaluation.Machine.ExMemory as P (ExCPU (..), ExMemo
 import qualified PlutusTx as P (Data (..))
 import qualified PlutusTx.IsData.Class as P (IsData (..))
 import Shelley.Spec.Ledger.Address (Addr (..), RewardAcnt (..))
-import Shelley.Spec.Ledger.Credential (Credential (KeyHashObj, ScriptHashObj), Ptr (..), StakeReference (..))
+import Shelley.Spec.Ledger.Credential (Credential (KeyHashObj, ScriptHashObj), Ptr (..), StakeReference (..), Ix (unIx))
 import Shelley.Spec.Ledger.Scripts (ScriptHash (..))
 import Shelley.Spec.Ledger.TxBody
   ( DCert (..),
@@ -130,7 +130,7 @@ transStakeCred (KeyHashObj (KeyHash (UnsafeHash kh))) = (fromShort kh)
 
 transStakeReference :: StakeReference crypto -> Maybe P.StakingCredential
 transStakeReference (StakeRefBase cred) = Just (P.StakingHash (transStakeCred cred))
-transStakeReference (StakeRefPtr (Ptr (SlotNo slot) i1 i2)) = Just (P.StakingPtr (fromIntegral slot) (fromIntegral i1) (fromIntegral i2))
+transStakeReference (StakeRefPtr (Ptr (SlotNo slot) i1 i2)) = Just (P.StakingPtr (fromIntegral slot) (fromIntegral $ unIx i1) (fromIntegral $ unIx i2))
 transStakeReference StakeRefNull = Nothing
 
 transCred :: Credential keyrole crypto -> P.Credential
