@@ -412,7 +412,7 @@ getWord7s :: Get [Word7]
 getWord7s = go 1
   where
     go :: Int -> Get [Word7]
-    go 64 = pure []
+    go 64 = fail "Word7s exceeds 64 bytes"
     go n = do
       next <- B.getWord8
       -- is the high bit set?
