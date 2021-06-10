@@ -39,6 +39,7 @@ import Control.DeepSeq (NFData)
 import Data.Aeson (FromJSON (..), FromJSONKey, ToJSON (..), ToJSONKey, (.:), (.=))
 import qualified Data.Aeson as Aeson
 import Data.Foldable (asum)
+import Data.Text.Prettyprint.Doc
 import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import GHC.Generics (Generic)
@@ -48,7 +49,6 @@ import Quiet
 import Shelley.Spec.Ledger.Orphans ()
 import Shelley.Spec.Ledger.Scripts (ScriptHash)
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
-import Data.Text.Prettyprint.Doc
 
 -- | Script hash or key hash for a payment or a staking object.
 --
@@ -101,7 +101,7 @@ data StakeReference crypto
 
 instance NoThunks (StakeReference crypto)
 
-newtype Ix = Ix { unIx :: Natural }
+newtype Ix = Ix {unIx :: Natural}
   deriving stock (Show, Generic)
   deriving newtype (Eq, Ord, NFData, NoThunks, Pretty, ToCBOR, Enum, Num)
 
@@ -113,8 +113,8 @@ instance FromCBOR Ix where
   fromCBOR = do
     n <- fromCBOR
     if n > unIx maxBound
-    then fail "Ix exceeds 64 bytes"
-    else pure (Ix n)
+      then fail "Ix exceeds 64 bytes"
+      else pure (Ix n)
 
 -- | Pointer to a slot, transaction index and index in certificate list.
 data Ptr

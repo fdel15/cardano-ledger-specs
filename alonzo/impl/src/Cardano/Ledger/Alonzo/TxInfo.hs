@@ -84,7 +84,7 @@ import qualified PlutusCore.Evaluation.Machine.ExMemory as P (ExCPU (..), ExMemo
 import qualified PlutusTx as P (Data (..))
 import qualified PlutusTx.IsData.Class as P (IsData (..))
 import Shelley.Spec.Ledger.Address (Addr (..), RewardAcnt (..))
-import Shelley.Spec.Ledger.Credential (Credential (KeyHashObj, ScriptHashObj), Ptr (..), StakeReference (..), Ix (unIx))
+import Shelley.Spec.Ledger.Credential (Credential (KeyHashObj, ScriptHashObj), Ix (unIx), Ptr (..), StakeReference (..))
 import Shelley.Spec.Ledger.Scripts (ScriptHash (..))
 import Shelley.Spec.Ledger.TxBody
   ( DCert (..),

@@ -77,6 +77,7 @@ import Cardano.Ledger.Keys
   )
 import Cardano.Prelude (cborError, panic)
 import Control.DeepSeq (NFData)
+import Control.Monad (when)
 import Data.Aeson (FromJSON (..), FromJSONKey (..), ToJSON (..), ToJSONKey (..), (.:), (.=))
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Encoding as Aeson
@@ -101,13 +102,13 @@ import Numeric.Natural (Natural)
 import Quiet
 import Shelley.Spec.Ledger.Credential
   ( Credential (..),
+    Ix (..),
     PaymentCredential,
     Ptr (..),
-    StakeReference (..), Ix (..)
+    StakeReference (..),
   )
 import Shelley.Spec.Ledger.Scripts
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
-import Control.Monad (when)
 
 mkVKeyRwdAcnt ::
   CC.Crypto crypto =>
@@ -442,7 +443,7 @@ getVariableLengthNat :: Get Natural
 getVariableLengthNat = word7sToNat <$> getWord7s
 
 getIx :: Get Ix
-getIx = do 
+getIx = do
   n <- getVariableLengthNat
   when (n > unIx maxBound) $ fail "Ix exceeds 64 bytes"
   pure (Ix n)

@@ -63,6 +63,7 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField (..))
 import NoThunks.Class (NoThunks (..))
 import Shelley.Spec.Ledger.Address (mkRwdAcnt)
+import Shelley.Spec.Ledger.Credential (Ix (Ix))
 import Shelley.Spec.Ledger.LedgerState
   ( AccountState,
     DPState (..),
@@ -83,7 +84,6 @@ import Shelley.Spec.Ledger.TxBody
     RewardAcnt (..),
     Wdrl (..),
   )
-import Shelley.Spec.Ledger.Credential (Ix(Ix))
 
 data DELEGS era
 

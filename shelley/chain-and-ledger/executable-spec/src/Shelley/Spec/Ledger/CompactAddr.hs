@@ -24,7 +24,7 @@ import Cardano.Ledger.Crypto (ADDRHASH)
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Keys (KeyHash (..))
 import Cardano.Prelude (Text, cborError, panic)
-import Control.Monad (ap)
+import Control.Monad (ap, when)
 import qualified Control.Monad.Fail
 import Data.Bits (testBit, (.&.))
 import Data.ByteString (ByteString)
@@ -37,13 +37,13 @@ import GHC.Natural (Natural)
 import Shelley.Spec.Ledger.Address (Addr (..), BootstrapAddress (..), Word7 (..), byron, isEnterpriseAddr, notBaseAddr, payCredIsScript, serialiseAddr, stakeCredIsScript, toWord7, word7sToNat)
 import Shelley.Spec.Ledger.Credential
   ( Credential (KeyHashObj, ScriptHashObj),
+    Ix (..),
     PaymentCredential,
     Ptr (..),
-    StakeReference (..), Ix (..)
+    StakeReference (..),
   )
 import Shelley.Spec.Ledger.Scripts (ScriptHash (..))
 import Shelley.Spec.Ledger.Slot (SlotNo (..))
-import Control.Monad (when)
 
 newtype CompactAddr crypto = UnsafeCompactAddr ShortByteString
   deriving (Eq, Ord)
@@ -193,7 +193,7 @@ getVariableLengthNat :: GetShort Natural
 getVariableLengthNat = word7sToNat <$> getWord7s
 
 getIx :: GetShort Ix
-getIx = do 
+getIx = do
   n <- getVariableLengthNat
   when (n > unIx maxBound) $ fail "Ix exceeds 64 bytes"
   pure (Ix n)
