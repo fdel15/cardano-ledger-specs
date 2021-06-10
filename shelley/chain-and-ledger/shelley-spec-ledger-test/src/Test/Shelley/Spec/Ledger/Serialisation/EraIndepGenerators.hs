@@ -128,7 +128,7 @@ import qualified Shelley.Spec.Ledger.STS.Utxow as STS
 import Cardano.Ledger.Serialization (ToCBORGroup)
 import Shelley.Spec.Ledger.Tx (WitnessSetHKD (WitnessSet), hashScript)
 import Test.QuickCheck (Arbitrary, arbitrary, genericShrink, listOf, oneof, recursivelyShrink, resize, shrink, vectorOf)
-import Test.QuickCheck.Gen (chooseAny, chooseEnum)
+import Test.QuickCheck.Gen (chooseAny, chooseInteger)
 import Test.Shelley.Spec.Ledger.ConcreteCryptoTypes (Mock)
 import Test.Shelley.Spec.Ledger.Generator.Constants (defaultConstants)
 import Test.Shelley.Spec.Ledger.Generator.Core
@@ -356,7 +356,7 @@ instance Arbitrary Ptr where
   arbitrary = Ptr <$> arbitrary <*> arbitraryIx <*> arbitraryIx
     where
     arbitraryIx :: Gen Natural
-    arbitraryIx = chooseEnum (0, (2 ^ (64 * 8 :: Natural)) - 1) -- limited to 64 bytes
+    arbitraryIx = fromInteger <$> chooseInteger (0, (2 ^ (64 * 8 :: Integer)) - 1) -- limited to 64 bytes
   shrink = genericShrink
 
 instance CC.Crypto crypto => Arbitrary (RewardAcnt crypto) where
