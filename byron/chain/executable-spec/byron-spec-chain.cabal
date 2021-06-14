@@ -52,7 +52,6 @@ library
                      , goblins
                      , hashable
                      , hedgehog >= 1.0.4
-                     , microlens
                      , small-steps
                      , small-steps-test
 
